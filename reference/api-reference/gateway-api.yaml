@@ -1,0 +1,1178 @@
+swagger: '2.0'
+info:
+  description: "The Anbox Stream Gateway provides federated access to Anbox Cloud\
+    \ regions.\nIt's primary purpose is it to connect clients to individual Android\
+    \ containers and enable WebRTC based streaming.\nTt does so via `sessions` which\
+    \ are 'chatrooms' for clients and stream providers to communicate.\nWhen the communication\
+    \ is established, the stream is sent directly from one peer to another.\n\nThe\
+    \ Anbox Stream Gateway keeps things simple and only manages what is required to\
+    \ make streaming happen.\nOther components can invoke its REST API to add other\
+    \ capabilities on top such as user management, limiting, etc.\n\n## Authentication\n\
+    \nAll calls to the Stream Gateway must be authenticated. Authentication takes\
+    \ the form of a single\ntoken per client you must embed in your requests\n\n###\
+    \ 1. Creating the token\n\nAn internal HTTP API is exposed for managing client\
+    \ tokens. This API is only accessible via a Unix domain socket\nwhich resides\
+    \ at `/var/snap/anbox-stream-gateway/common/service/unix.socket` by default. \
+    \ \nFor convenience, the Stream Gateway has a built-in client designed to communicate\
+    \ to that API.\n\n**Creating a token**\n\n    $ anbox-stream-gateway account create\
+    \ my-client\n    AgEUYW5ib3gtc3RyZWFtLWdhdGV3YXkCBGFzZGYAAhkyMDIwLTA2LTIzVDA5OjMyOjE5KzAyOjAwAAAGIDcZMdTrdNdJB6kzjoXyx1_T6s8-0C1AQSyzaA_GHLYQ\n\
+    \n**Deleting a token**\n\n    $ anbox-stream-gateway account delete my-client\n\
+    \    Account my-client deleted successfully\n\nYou can type `anbox-stream-gateway\
+    \ --help` to list all commands\n\n### 2. Using the token in your requests\n\n\
+    When making requests to the Stream Gateway API you can either place the token\
+    \ in the request HTTP headers or\nin the query parameters.\n\n**Request headers**\n\
+    \n    $ curl -X GET https://20.234.75.29:4000/1.0/sessions \\\n            -H\
+    \ 'authorization=macaroon root=AgEUYW5ib3...QSyzaA_GHLYQ'\n\n**Query parameters**\n\
+    \n    $ curl -X GET https://20.234.75.29:4000/1.0/sessions?api_token=AgEUYW5ib3...QSyzaA_GHLYQ\n"
+  title: Anbox Stream Gateway
+  contact:
+    name: Canonical
+    url: https://ubuntu.com/support
+    email: indore@lists.canonical.com
+  license:
+    name: Proprietary
+  version: '1.0'
+basePath: /1.0/
+paths:
+  /1.0/applications:
+    get:
+      security:
+        - AuthToken: []
+      description: Return all applications that were registered via AMS and that support
+        streaming.
+      tags:
+        - application
+      summary: Get applications
+      operationId: handle-get-applications
+      responses:
+        '200':
+          description: List of applications
+          schema:
+            $ref: '#/definitions/api.ApplicationsGetResponse'
+  /1.0/regions:
+    get:
+      security:
+        - AuthToken: []
+      description: 'Regions are cloud regions, allowing clients to be as close as
+        possible
+
+        to the agent running the Android container.
+
+
+        The list is dynamic and regions might change as agents are added or removed.'
+      tags:
+        - region
+      summary: Get regions
+      operationId: handle-get-regions
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/api.RegionsGetResponse'
+  /1.0/session/{id}/sockets/adb:
+    get:
+      description: 'A websocket connection endpoint which initiates the signaling
+        process with the adb role.
+
+        This URL is returned then joining a session along with its credentials.'
+      tags:
+        - session
+      summary: Join session as ADB client
+      operationId: handle-adb-connect-session
+      responses: {}
+  /1.0/session/{id}/sockets/master:
+    get:
+      description: 'A websocket connection endpoint which initiates the signaling
+        process with the master role.
+
+        You MUST call /sessions/{id}/join beforehand to prepare the android container.'
+      tags:
+        - session
+      summary: Join session as master
+      operationId: handle-master-connect-session
+      responses: {}
+  /1.0/session/{id}/sockets/slave:
+    get:
+      description: 'A websocket connection endpoint which initiates the signaling
+        process with the slave role.
+
+        This URL is returned then joining a session along with its credentials.'
+      tags:
+        - session
+      summary: Join session as slave
+      operationId: handle-slave-connect-session
+      responses: {}
+  /1.0/sessions:
+    get:
+      security:
+        - AuthToken: []
+      produces:
+        - application/json
+      tags:
+        - session
+      summary: Get all sessions
+      operationId: handle-get-sessions
+      parameters:
+        - type: string
+          description: Filter returned sessions by given status
+          name: status
+          in: query
+        - type: boolean
+          description: Return full session objects rather than just their ID
+          name: recursive
+          in: query
+        - type: integer
+          description: Limit number of results returned
+          name: limit
+          in: query
+        - type: integer
+          description: Offset to list results from
+          name: offset
+          in: query
+        - type: string
+          description: Field of the session to sort results by
+          name: sort_by
+          in: query
+        - type: string
+          description: 'Sort order of the returned results. Possible values are: asc,
+            desc'
+          name: sort_order
+          in: query
+      responses:
+        '200':
+          description: OK
+          schema:
+            $ref: '#/definitions/api.SessionsGetResponse'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+    post:
+      security:
+        - AuthToken: []
+      description: 'Create a new session based on an application, application version,
+        region
+
+        and screen details. The newly created session is started immediately after
+
+        being created. The returned session details can be used to immediately start
+
+        the signaling process. If an application version is not specified, the latest
+
+        application version will always be in use for a session creation.'
+      consumes:
+        - application/json
+      produces:
+        - application/json
+      tags:
+        - session
+      summary: Create session
+      operationId: handle-new-session
+      parameters:
+        - description: Session details
+          name: session
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/api.SessionPost'
+      responses:
+        '201':
+          description: Newly created session along with the information needed to
+            connect to it
+          schema:
+            $ref: '#/definitions/api.SessionPostResponse'
+        '400':
+          description: Invalid body or missing application
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '404':
+          description: No agent can host the container
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+    delete:
+      security:
+        - AuthToken: []
+      tags:
+        - session
+      summary: Batch delete sessions
+      operationId: handle-delete-sessions
+      parameters:
+        - description: List of session IDs to delete
+          name: ids
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/api.SessionsDelete'
+        - type: boolean
+          description: Force deletion even if agent is not available. This may leave
+            a container around on the agent.
+          name: force
+          in: query
+        - type: boolean
+          description: Set to true to wait for the response (can take a long time
+            for lots of sessions) or to false to return without waiting for all sessions
+            to be deleted. Defaults to false
+          name: sync
+          in: query
+      responses:
+        '200':
+          description: Contains an array of deleted sessions as well as potential
+            errors
+          schema:
+            $ref: '#/definitions/api.SessionsDeleteResponse'
+        '202':
+          description: Returned when sync=true. Watch the session list for progress
+            on the operation
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '207':
+          description: Some sessions could not be deleted
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '400':
+          description: Invalid request body
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '404':
+          description: Non-existent sessions
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '500':
+          description: Internal issue
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+  /1.0/sessions/{id}:
+    get:
+      security:
+        - AuthToken: []
+      description: Returns a session from its ID.
+      produces:
+        - application/json
+      tags:
+        - session
+      summary: Get session
+      operationId: handle-get-session
+      parameters:
+        - type: string
+          description: Session ID
+          name: id
+          in: path
+          required: true
+      responses:
+        '200':
+          description: The requested session
+          schema:
+            $ref: '#/definitions/api.SessionGetResponse'
+        '400':
+          description: Invalid session ID
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '404':
+          description: Non-existent session
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+    delete:
+      security:
+        - AuthToken: []
+      tags:
+        - session
+      summary: Delete a session
+      operationId: handle-delete-session
+      parameters:
+        - type: string
+          description: Session ID
+          name: id
+          in: path
+          required: true
+        - type: boolean
+          description: Force deletion even if agent is not available. This may leave
+            a container around on the agent.
+          name: force
+          in: query
+        - type: boolean
+          description: Set to true to wait for the response or to false to return
+            early without waiting for the session to be deleted
+          name: sync
+          in: query
+      responses:
+        '200':
+          description: Empty response to indicate success
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '400':
+          description: Invalid session ID
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '404':
+          description: Non-existent session
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+  /1.0/sessions/{id}/connect:
+    get:
+      description: 'Connect an existing running session from a client. The returned
+
+        object contains a URL with the required credentials for a client
+
+        to connect to the remote Anbox instance.'
+      tags:
+        - session
+      summary: Connect a session
+      operationId: handle-connect-session
+      responses:
+        '200':
+          description: Object containing a URL with the required credentials to connect
+            to the remote Anbox instance
+          schema:
+            $ref: '#/definitions/api.SessionConnectGetResponse'
+        '400':
+          description: Missing session ID, inactive session, invalid connection type
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '401':
+          description: Authorization failed
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '500':
+          description: Error when failing to generate auth token/STUN servers, or
+            setup connection
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+  /1.0/sessions/{id}/join:
+    post:
+      security:
+        - AuthToken: []
+      description: 'Join an existing running session. The session must already be
+        running. The
+
+        returned object contains a URL with the required credentials for a client
+
+        to join the signaling process.'
+      tags:
+        - session
+      summary: Join session
+      operationId: handle-join-session
+      parameters:
+        - description: Additional information about the join request
+          name: session
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/api.SessionJoinPost'
+      responses:
+        '200':
+          description: Object containing the slave URL as well as optional additional
+            STUN/TURN servers
+          schema:
+            $ref: '#/definitions/api.SessionJoinResponse'
+        '400':
+          description: Missing session ID or invalid session state
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '404':
+          description: The session does not exist
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '500':
+          description: Error when trying to generate session details
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+  /1.0/sessions/{id}/share:
+    post:
+      security:
+        - AuthToken: []
+      description: 'Share an existing running session with a client. The returned
+
+        object contains a URL for a client to interact with a session'
+      tags:
+        - session
+      summary: Share session
+      operationId: handle-share-session
+      parameters:
+        - description: Required parameters to the share request
+          name: session
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/api.SessionSharePost'
+      responses:
+        '200':
+          description: Object containing a URL for a client to interact with a session
+          schema:
+            $ref: '#/definitions/api.SessionSharePostResponse'
+        '400':
+          description: Missing session ID, invalid request content, share type or
+            expiration time
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '404':
+          description: The session does not exist
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '500':
+          description: Error when failing to generate auth token
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+  /1.0/status:
+    get:
+      description: 'Returns the current status of the Gateway service along with some
+        indicators that
+
+        can be helpful to determine larger issues. The Gateway can be either healthy
+        or unhealthy.
+
+        Please note that a healthy status does not necessarily mean that a deployment
+        is fully working.
+
+        Other issues can affect the Streaming Stack but a healthy status only guarantees
+        that the Gateway itself
+
+        is not experiencing issues that would prevent it from working normally.
+
+        Checking for status can take up to 7 seconds. Note that this is the upper
+        bound, in normal
+
+        circumstances, the timing will be much lower and timings higher than a couple
+        seconds are usually
+
+        indicators or something wrong (network issue, node restarted, etc).
+
+        '
+      produces:
+        - application/json
+      tags:
+        - status
+      summary: Returns the Gateway service status.
+      operationId: handle-get-status
+      responses:
+        '200':
+          description: Only status is present if the request is not authenticated
+          schema:
+            $ref: '#/definitions/api.StatusGetResponseAuthenticated'
+        '500':
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+        '503':
+          description: The Gateway is not fully started
+          schema:
+            $ref: '#/definitions/github_com_canonical_ams_api_gateway.Response'
+definitions:
+  api.Application:
+    type: object
+    properties:
+      name:
+        type: string
+        example: com.foo.bar
+  api.ApplicationsGetResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        type: array
+        items:
+          $ref: '#/definitions/api.Application'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.Region:
+    type: object
+    properties:
+      name:
+        type: string
+        example: eu-west-1
+  api.RegionsGetResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        type: array
+        items:
+          $ref: '#/definitions/api.Region'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.ResponseType:
+    type: string
+    enum:
+      - sync
+      - async
+      - error
+    x-enum-varnames:
+      - ResponseTypeSync
+      - ResponseTypeAsync
+      - ResponseTypeError
+  api.Screen:
+    type: object
+    properties:
+      density:
+        description: 'Display density Android will be configured with. See https://developer.android.com/training/multiscreen/screendensities
+
+          for more details'
+        type: integer
+        default: 240
+        minimum: 72
+        example: 240
+      fps:
+        description: FPS the video stream will use
+        type: integer
+        minimum: 1
+        example: 25
+      height:
+        description: Height of the screen
+        type: integer
+        minimum: 1
+        example: 720
+      width:
+        description: Width of the screen
+        type: integer
+        minimum: 1
+        example: 1280
+  api.Session:
+    type: object
+    properties:
+      app:
+        description: 'App that will be run in the session.
+
+          Applications are listed from AMS if they have been configured for streaming.'
+        type: string
+      cluster_id:
+        description: ID of the cluster which the instance is deployed to
+        type: string
+        example: cluster0
+      container_id:
+        description: 'ID of the container powering the session. If no container was
+          created yet
+
+          or the container is destroyed, the ID will be empty.'
+        type: string
+        example: c05h1jj3pn6a8q46taug
+      id:
+        description: ID of the session.
+        type: string
+        example: e25f3e3bcead096461d89d8ab7043f14bdb1ecd39
+      joinable:
+        description: Marks wether the session is joinable or not
+        type: boolean
+      region:
+        description: Region on which the instance is located.
+        type: string
+        example: eu-west-1
+      status:
+        description: "Status of the session.\n created: sent creation request to an\
+          \ available agent.\n active: container is up and running.\n error: an error\
+          \ occurred and the container is stopped.\n terminated: the container has\
+          \ stopped gracefully, either by manual command or timeout."
+        enum:
+          - created
+          - active
+          - error
+          - terminating
+          - terminated
+        allOf:
+          - $ref: '#/definitions/api.SessionStatus'
+      status_message:
+        description: Message giving more information about the current status
+        type: string
+        example: Container failed to start
+  api.SessionConnectGetResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        description: Metadata contains session connection response data
+        allOf:
+          - $ref: '#/definitions/api.SessionConnectGetResponseData'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.SessionConnectGetResponseData:
+    type: object
+    properties:
+      stun_servers:
+        description: 'StunServers is a list of STUN servers with their optional credentials.
+
+          They are passed to the client to figure out the best route to the
+
+          actual android instance.
+
+          They are used within the WebRTC protocol to negotiation a peer to peer transport
+
+          between the Anbox instance and the connecting client.'
+        type: array
+        items:
+          $ref: '#/definitions/github_com_canonical_ams_api_gateway.StunServer'
+      url:
+        description: URL is the endpoint to reach to start the WebRTC signaling process.
+        type: string
+        example: wss://api.example.com/1.0/session/e25fcd39/sockets/adb?token=foobar
+  api.SessionGetResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        $ref: '#/definitions/api.Session'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.SessionJoinPost:
+    type: object
+    properties:
+      screen:
+        description: 'Definition of the screen dimensions. Allows changing the dimensions
+          the containers are configured
+
+          with to match client expectation for the video stream. The maximum allowd
+          screen resolution is
+
+          4k (3840 x 2160).'
+        allOf:
+          - $ref: '#/definitions/api.Screen'
+  api.SessionJoinResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        $ref: '#/definitions/api.SessionJoinResponseData'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.SessionJoinResponseData:
+    type: object
+    properties:
+      stun_servers:
+        description: 'StunServers is a list of STUN servers with their optional credentials.
+
+          They are passed to the client to figure out the best route to the
+
+          actual android instance.
+
+          They are used within the WebRTC protocol to negotiation a peer to peer transport
+
+          between the Android instance and the connecting client.'
+        type: array
+        items:
+          $ref: '#/definitions/github_com_canonical_ams_api_gateway.StunServer'
+      url:
+        description: URL is the endpoint to reach to start the WebRTC signaling process.
+        type: string
+        example: https://api.example.com/1.0/session/e25fcd39/sockets/slave?token=foobar
+  api.SessionPost:
+    type: object
+    properties:
+      app:
+        description: Application the session should be created for
+        type: string
+        example: com.foo.bar
+      app_version:
+        description: 'Which specific version of the application to launch for the
+          session. If
+
+          not specified, the last published version is launched.'
+        type: integer
+        example: 0
+      ephemeral:
+        description: 'Ephemeral controls whether the session should be deleted after
+          the client
+
+          disconnects or not. If the containers runs into an error, the session is
+          kept
+
+          if with Ephemeral set to true.'
+        type: boolean
+        default: true
+        example: false
+      extra_data:
+        description: Extra data passed as part of the userdata to the container
+        type: string
+        example: userid=123
+      idle_time_min:
+        description: 'Time in minutes a session stays idle without any client connected.
+          The
+
+          value "0" is special and causes the container to stay alive until the
+
+          session is terminated by an API call or the container decide on its own
+
+          to shutdown.'
+        type: integer
+        example: 5
+      joinable:
+        description: 'Makes the session joinable by another client after the initial
+          client left.
+
+          Requires idle_time_min to be set.'
+        type: boolean
+        example: true
+      region:
+        description: 'Region the session should be created in. If left empty a region
+          is randomly
+
+          selected.'
+        type: string
+        example: us-west-1
+      screen:
+        description: 'Definition of the screen dimensions. The maximum allowd screen
+          resolution is
+
+          4k (3840 x 2160).'
+        allOf:
+          - $ref: '#/definitions/api.Screen'
+  api.SessionPostResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        $ref: '#/definitions/api.SessionPostResponseData'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.SessionPostResponseData:
+    type: object
+    properties:
+      id:
+        description: ID of the session.
+        type: string
+        example: e25f3e3bcead096461d89d8ab7043f14bdb1ecd39
+      joinable:
+        description: Marks the session joinable after the initial client left
+        type: boolean
+        example: true
+      region:
+        description: 'Region is a cloud region where the application will be launched.
+
+          Regions are registered dynamically by agents.'
+        type: string
+        example: eu-west-2
+      status:
+        description: "Status of the session.\n created: sent creation request to an\
+          \ available agent.\n active: container is up and running.\n error: an error\
+          \ occurred and the container is stopped.\n terminated: the container has\
+          \ stopped gracefully, either by manual command or timeout."
+        enum:
+          - created
+          - active
+          - error
+          - terminating
+          - terminated
+        allOf:
+          - $ref: '#/definitions/api.SessionStatus'
+        example: active
+      stun_servers:
+        description: 'StunServers is a list of STUN servers with their optional credentials.
+
+          They are passed to the client to figure out the best route to the
+
+          actual android instance.
+
+          They are used within the WebRTC protocol to negotiation a peer to peer transport
+
+          between the Android instance and the connecting client.'
+        type: array
+        items:
+          $ref: '#/definitions/github_com_canonical_ams_api_gateway.StunServer'
+      url:
+        description: URL is the endpoint to reach to start the WebRTC signaling process.
+        type: string
+  api.SessionSharePost:
+    type: object
+    properties:
+      expiry_min:
+        description: ExpiryMin is the expiration time in minutes for the share URL
+        type: integer
+        default: 5
+        maximum: 1
+        example: 5
+      type:
+        description: Type is the type of the session to be shared
+        type: string
+        example: adb
+  api.SessionSharePostResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        description: Metadata contains a URL that a client can connect to interact
+          with a session
+        allOf:
+          - $ref: '#/definitions/api.SessionSharePostResponseData'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.SessionSharePostResponseData:
+    type: object
+    properties:
+      expiry_min:
+        description: The expiration time in minutes for the share URL
+        type: integer
+        example: 5
+      url:
+        description: URL is the endpoint to reach to start the WebRTC signaling process.
+        type: string
+        example: https://api.example.com/1.0/session/e25fcd39/connect?type=adb&token=foobar
+  api.SessionStatus:
+    type: string
+    enum:
+      - created
+      - active
+      - error
+      - terminating
+      - terminated
+    x-enum-varnames:
+      - SessionStatusCreated
+      - SessionStatusActive
+      - SessionStatusError
+      - SessionStatusTerminating
+      - SessionStatusTerminated
+  api.SessionsDelete:
+    type: object
+    properties:
+      ids:
+        type: array
+        items:
+          type: string
+  api.SessionsDeleteError:
+    type: object
+    properties:
+      error_message:
+        description: ErrorMessage contains information about the failure
+        type: string
+      session_id:
+        description: SessionID is the id of the session that failed to be deleted
+        type: string
+      status_code:
+        description: StatusCode relevant to the error
+        type: integer
+  api.SessionsDeleteResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        type: object
+        properties:
+          deleted_sessions:
+            description: DeletedSessions is the list of sessions IDs that were successfully
+              deleted
+            type: array
+            items:
+              type: string
+          errors:
+            description: Errors, if not empty, contains the list of sessions that
+              failed to be deleted
+            type: array
+            items:
+              $ref: '#/definitions/api.SessionsDeleteError'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.SessionsGetResponse:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        type: array
+        items:
+          type: string
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      total_size:
+        description: TotalSize specifies how many session objects are available in
+          total
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.StatusGetResponseAuthenticated:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      metadata:
+        $ref: '#/definitions/api.StatusGetResponseAuthenticatedData'
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  api.StatusGetResponseAuthenticatedData:
+    type: object
+    properties:
+      agents:
+        type: integer
+      database_nodes:
+        type: integer
+      status:
+        $ref: '#/definitions/github_com_canonical_ams_api_gateway.ServiceStatus'
+  github_com_canonical_ams_api_gateway.Response:
+    type: object
+    properties:
+      error:
+        description: Error is an optional error message
+        type: string
+        example: invalid body format
+      status:
+        description: Status of the response
+        enum:
+          - success
+          - failed
+          - unknown
+        allOf:
+          - $ref: '#/definitions/github_com_canonical_ams_api_gateway.ResponseStatus'
+      status_code:
+        description: StatusCode is the HTTP code of the response
+        type: integer
+      type:
+        description: Type of the operation
+        enum:
+          - sync
+          - async
+          - error
+        allOf:
+          - $ref: '#/definitions/api.ResponseType'
+        example: sync
+  github_com_canonical_ams_api_gateway.ResponseStatus:
+    type: string
+    enum:
+      - success
+      - failed
+      - unknown
+    x-enum-varnames:
+      - ResponseStatusSuccess
+      - ResponseStatusFailed
+      - ResponseStatusUnknown
+  github_com_canonical_ams_api_gateway.ServiceStatus:
+    type: string
+    enum:
+      - healthy
+      - unhealthy
+    x-enum-varnames:
+      - ServiceStatusHealthy
+      - ServiceStatusUnhealthy
+  github_com_canonical_ams_api_gateway.StunServer:
+    type: object
+    properties:
+      password:
+        description: 'Password is the optional password to authenticate on the STUN/TURN
+          server.
+
+          It is usually unique to a session.'
+        type: string
+        example: 3f14bdb1ecd3
+      urls:
+        description: URLs is the list of endpoints the STUN/TURN server can be reached
+          on.
+        type: array
+        items:
+          type: string
+        example:
+          - https://stun.foo.com
+          - https://turn.foo.com
+      username:
+        description: 'Username is the optional username to authenticate on the STUN/TURN
+          server.
+
+          It is usually unique to a session.'
+        type: string
+        example: f3e3bcead096461d8

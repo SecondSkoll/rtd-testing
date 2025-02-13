@@ -1,0 +1,58 @@
+name: Automatically generate command reference topics
+on:
+  workflow_dispatch:
+  # Run daily after midnight UTC
+  schedule:
+  - cron: '22 1 * * *'
+
+env:
+  AMC_COMMAND_REFERENCE_DIR: "./reference/cmd-ref/amc"
+  APPLIANCE_COMMAND_REFERENCE_DIR: "./reference/cmd-ref/appliance"
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Determine base version
+      id: base_version
+      run: |
+        echo "value=$(cat .base_version)" >> "$GITHUB_OUTPUT"
+    - name: Set up Anbox Cloud
+      uses: canonical/anbox-cloud-github-action@66d8b6d8788a3c880d3ed6fc04b4b34a54da6fe2
+      with:
+        channel: ${{ steps.base_version.outputs.value }}/stable
+    - name: Checkout repo
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+      # Remove existing files, generate AMC command reference
+    - name: Generate AMC command reference documentation
+      run: |
+        set -e
+        # Remove existing files, generate AMC command reference
+        rm -rf $AMC_COMMAND_REFERENCE_DIR/*
+        amc generate documentation -f markdown -d $AMC_COMMAND_REFERENCE_DIR
+    - name: Generate appliance command reference documentation
+      env:
+        SNAP_DOCS_DIR: "/var/snap/anbox-cloud-appliance/common/docs"
+      run: |
+        set -e
+        # Remove existing files, generate appliance command reference
+        rm -rf $APPLIANCE_COMMAND_REFERENCE_DIR/*
+        # For the appliance command, the files have to be generated inside the Snap
+        # and then copied to the desired directory because of Snap confinement
+        sudo mkdir -p $SNAP_DOCS_DIR
+        sudo anbox-cloud-appliance generate documentation -f markdown -d $SNAP_DOCS_DIR
+        cp -r $SNAP_DOCS_DIR/* $APPLIANCE_COMMAND_REFERENCE_DIR
+    - name: Create pull request
+      uses: canonical/create-pull-request@5395f8e286168a9cfb613a84cd0ecb6f3420e6c6
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        commit-message: "Commit changes to command reference documentation"
+        branch-name: update-cmd-ref
+        title: Update command reference documentation
+        body: |
+          This updates the command reference topics for the AMC and Anbox Cloud Appliance.
+          
+          You have to close and reopen the PR to trigger checks.
+        repository: canonical/anbox-cloud-docs
+        upsert: true
+        ignore-no-changes: true
