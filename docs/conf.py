@@ -155,6 +155,10 @@ html_context = {
     'github_issues': 'enabled',
 }
 
+html_theme_options = {
+ 'source_edit_link': 'https://github.com/SecondSkoll/rtd-testing',
+}
+
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
 #
 # TODO: If your documentation is hosted on https://docs.ubuntu.com/,
