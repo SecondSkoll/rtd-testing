@@ -54,8 +54,8 @@ $(VENVDIR):
         (echo "You must install python3-venv before you can build the documentation."; exit 1)
 	@echo "... setting up virtualenv"
 	python3 -m venv $(VENVDIR)
-	. $(VENV); pip install $(PIPOPTS) --require-virtualenv \
-	    --upgrade -r $(SPHINXDIR)/requirements.txt \
+	. $(VENV); pip install $(PIPOPTS) --no-cache-dir --require-virtualenv \
+	    --upgrade -r  $(SPHINXDIR)/requirements.txt \
             --log $(VENVDIR)/pip_install.log
 	@test ! -f $(VENVDIR)/pip_list.txt || \
             mv $(VENVDIR)/pip_list.txt $(VENVDIR)/pip_list.txt.bak
@@ -87,7 +87,7 @@ pa11y-install:
 install: $(VENVDIR)
 
 run: install
-	. $(VENV); $(VENVDIR)/bin/sphinx-autobuild -b dirhtml "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+	. $(VENV); $(VENVDIR)/bin/sphinx-autobuild -b dirhtml --port 8008 "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
 
 # Doesn't depend on $(BUILDDIR) to rebuild properly at every run.
 html: install

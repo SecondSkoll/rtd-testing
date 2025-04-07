@@ -135,13 +135,13 @@ html_context = {
     # Docs branch in the repo; used in links for viewing the source files
     #
     # TODO: To customise the branch, uncomment and update as needed.
-    'github_version': 'main',
+    'repo_default_branch': 'main',
     # Docs location in the repo; used in links for viewing the source files
     #
 
 
     # TODO: To customise the directory, uncomment and update as needed.
-    "github_folder": "/docs/",
+    "repo_folder": "/docs/",
     # TODO: To enable or disable the Previous / Next buttons at the bottom of pages
     # Valid options: none, prev, next, both
     # "sequential_nav": "both",
@@ -243,6 +243,7 @@ extensions = [
     "canonical_sphinx",
     "sphinxcontrib.cairosvgconverter",
     "sphinx_last_updated_by_git",
+    "notfound.extension",
 ]
 
 # Excludes files or directories from processing
