@@ -9,11 +9,11 @@ on:
 
 jobs:
   rtd_rebuild:
-  runs-on: ubuntu-latest
-  steps:
-  - name: Checkout
-    uses: actions/checkout@v4
-  - name: trigger build
-    run: |
-      chmod +x ./scripts/rebuild_project.py
-      python3 ./scripts/rebuild_project.py
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: trigger build
+      run: |
+        chmod +x ./scripts/rebuild_project.py
+        python3 ./scripts/rebuild_project.py
