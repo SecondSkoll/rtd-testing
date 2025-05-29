@@ -171,7 +171,7 @@ html_theme_options = {
 
 html_static_path = [".sphinx/_static"]
 templates_path = [".sphinx/_templates"]
-html_extra_path = ["robots.txt"]
+html_extra_path = ["robots.txt", "sitemap.xml"]
 
 
 
