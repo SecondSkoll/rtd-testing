@@ -25,11 +25,11 @@ connected system.
 .. grid:: 1 1 2 2
    
 
-   .. grid-item:: :doc:`How-to guides <en/how-to>`
+   .. grid-item:: 
 
       Step-by-step guides covering key operations and common tasks.
 
-   .. grid-item:: :doc:`Reference <en/reference>`
+   .. grid-item:: 
 
       Technical information - specifications, APIs, architecture.
 
