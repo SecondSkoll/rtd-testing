@@ -1,5 +1,6 @@
 import datetime
 import ast
+import os
 
 # Configuration for the Sphinx documentation builder.
 # All configuration specific to your project should be done in this file.
@@ -166,12 +167,28 @@ html_theme_options = {
 
 #slug = "enterprise-store"
 
+#######################
+# Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
+#######################
+
+# Base URL of RTD hosted project
+
+html_baseurl = 'https://canonical-starter-pack.readthedocs-hosted.com/'
+
+# URL scheme. Add language and version scheme elements manually e.g. '{0}/{1}/{{link}}'.format(os.environ['READTHEDOCS_LANGUAGE'], os.environ['READTHEDOCS_VERSION'])
+
+# When configured with RTD variables, check for RTD environment so manual runs succeed:
+
+if 'READTHEDOCS' in os.environ and os.environ['READTHEDOCS'] == True:
+    sitemap_url_scheme = '{0}/{{link}}'.format(os.environ['READTHEDOCS_VERSION'])
+else:
+    sitemap_url_scheme = '1.1.0/{link}'
 
 # Template and asset locations
 
 html_static_path = [".sphinx/_static"]
 templates_path = [".sphinx/_templates"]
-html_extra_path = ["robots.txt", "sitemap.xml"]
+
 
 
 
