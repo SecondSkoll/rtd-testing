@@ -50,10 +50,5 @@ Thinking about deploying the Enterprise Store in your enterprise? `Get in touch!
    :maxdepth: 2
    :hidden:
 
-   How-to <en/how-to>
+   test
 
-.. toctree::
-   :maxdepth: 2
-   :hidden:
-
-   Reference <en/reference>
