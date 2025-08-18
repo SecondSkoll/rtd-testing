@@ -350,7 +350,7 @@ if "discourse_prefix" not in html_context and "discourse" in html_context:
 
 
 if 'TOKEN' in os.environ:
-    header = {'Authorization': f'token {os.environ['TOKEN']}'}
+    header = {'Authorization': f'token {os.environ["TOKEN"]}'}
     linkcheck_auth = [
     ('https://documentation\.ubuntu\.com/.+', (f'headers={header}')),
     ]
