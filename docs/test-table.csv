@@ -1,0 +1,37 @@
+Name,RTD project
+ADSys,ADSys
+Anbox Cloud,Anbox Cloud
+Authd,authd
+Canonical Kubernetes,k8s-snap
+Charmed Feast,charmed-feast
+Charmed MLflow,Charmed MLflow
+Chisel,chisel
+Data Science Stack,data-science-stack
+Dedicated snap store,dedicated-snap-store
+Enterprise Store,Snap Store Proxy
+Juju,Juju
+Landscape,landscape
+Launchpad Manual,Launchpad
+LXD,LXD
+MicroCloud,MicroCloud
+Multipass,Multipass
+Observability,Observability
+Pebble,pebble
+Public Cloud,Public Cloud
+Public Images,Public Images
+Real-time Ubuntu documentation,Real-time Ubuntu documentation
+Rockcraft,Rockcraft
+Snapcraft,Snapcraft
+Stable Release Updates,SRU docs
+Ubuntu Core,Ubuntu Core
+Ubuntu for Developers,Ubuntu for Developers
+Ubuntu on AWS,Ubuntu on AWS
+Ubuntu on Azure,Ubuntu on Azure
+Ubuntu on Google Cloud,Ubuntu on Google Cloud
+Ubuntu on OCI Registries,Ubuntu on OCI Registries
+Ubuntu Pro,Ubuntu Pro
+Ubuntu Pro Client,Ubuntu Pro Client
+Ubuntu security documentation,ubuntu-security-documentation
+Ubuntu security team documentation,ubuntu-security-team-documentation
+Ubuntu Server,Ubuntu Server Documentation
+Ubuntu WSL,Ubuntu WSL

@@ -267,7 +267,20 @@ extensions = [
     "sphinxcontrib.cairosvgconverter",
     "sphinx_last_updated_by_git",
     "notfound.extension",
+    "sphinx_datatables",
+    "sphinxcontrib.jquery",
+    "swagger_plugin_for_sphinx",
 ]
+
+# set the version to use for DataTables plugin
+datatables_version = "1.13.4"
+
+# name of the class to use for tables to enable DataTables
+datatables_class = "sphinx-datatable"
+
+# any custom options to pass to the DataTables constructor. Note that any
+# options you set are used for all DataTables.
+datatables_options = {}
 
 # Excludes files or directories from processing
 
@@ -279,7 +292,7 @@ exclude_patterns = [
 # Adds custom CSS files, located under 'html_static_path'
 
 html_css_files = [
-    "css/pdf.css",
+    "project_specific.css",
 ]
 
 
@@ -334,3 +347,23 @@ rst_prolog = """
 
 if "discourse_prefix" not in html_context and "discourse" in html_context:
     html_context["discourse_prefix"] = html_context["discourse"] + "/t/"
+
+
+if 'TOKEN' in os.environ:
+    header = {'Authorization': f'token {os.environ['TOKEN']}'}
+    linkcheck_auth = [
+    ('https://documentation\.ubuntu\.com/.+', (f'headers={header}')),
+    ]
+
+# set the version to use for DataTables plugin
+datatables_version = "2.3.0"
+
+# name of the class to use for tables to enable DataTables
+datatables_class = "sphinx-datatable"
+
+# any custom options to pass to the DataTables constructor. Note that any
+# options you set are used for all DataTables.
+datatables_options = {
+    "pageLength": 10,
+    "lengthMenu": [10, 25, 50, -1],
+}

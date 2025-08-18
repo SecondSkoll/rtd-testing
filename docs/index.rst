@@ -19,17 +19,16 @@ With the Enterprise Store, snaps are as easy-to-use as ever, and administrators
 have much greater control over exactly what revisions are installed on each
 connected system.
 
-
 .. rubric:: In this documentation
 
 .. grid:: 1 1 2 2
    
 
-   .. grid-item:: :doc:`How-to guides <en/how-to>`
+   .. grid-item:: 
 
       Step-by-step guides covering key operations and common tasks.
 
-   .. grid-item:: :doc:`Reference <en/reference>`
+   .. grid-item:: 
 
       Technical information - specifications, APIs, architecture.
 
