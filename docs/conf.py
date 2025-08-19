@@ -350,10 +350,12 @@ if "discourse_prefix" not in html_context and "discourse" in html_context:
 
 
 if 'TOKEN' in os.environ:
-    header = {'Authorization': f'token {os.environ["TOKEN"]}'}
-    linkcheck_auth = [
-    ('https://documentation\.ubuntu\.com/.+', (f'headers={header}')),
-    ]
+    header = {}
+    linkcheck_request_headers = {
+        'https://documentation.ubuntu.com/': {
+            'Authorization': f'token {os.environ["TOKEN"]}'
+        },
+    }
 
 # set the version to use for DataTables plugin
 datatables_version = "2.3.0"
