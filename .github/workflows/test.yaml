@@ -1,6 +1,8 @@
 name: Automatic documentation checks
 
 on:
+  push:
+    branches: [ main ]
   workflow_call:
     inputs:
       working-directory:
