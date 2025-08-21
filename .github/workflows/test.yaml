@@ -3,97 +3,31 @@ name: Automatic documentation checks
 on:
   push:
     branches: [ main ]
-  workflow_call:
-    inputs:
-      working-directory:
-        description: 'Working directory'
-        required: true
-        type: string
-      python-version:
-        description: 'Version of the Python interpreter to use (defaults to 3.10)'
-        required: false
-        type: string
-        default: '3.10'
-      makefile:
-        description: 'Name of the Makefile to use (default: "Makefile.sp" if it exists, "Makefile" otherwise)'
-        required: false
-        type: string
-        default: 'use-default'
-      install-target:
-        description: 'Target to run to install the tools (default: "install")'
-        required: false
-        type: string
-        default: 'install'
-      spelling-target:
-        description: 'Target to run for the spelling check (default: "spelling")'
-        required: false
-        type: string
-        default: 'spelling'
-      woke-target:
-        description: 'Target to run for the inclusive language check (default: "woke")'
-        required: false
-        type: string
-        default: 'woke'
-      linkcheck-target:
-        description: 'Target to run for the link check (default: "linkcheck")'
-        required: false
-        type: string
-        default: 'linkcheck'
-      fetch-depth:
-        description: 'Fetch depth to support timestamps'
-        required: false
-        type: string
-        default: '0'
-      runs-on:
-        description: 'GitHub runners'
-        required: false
-        type: string
-        default: '["ubuntu-24.04"]'
-      pa11y-target:
-        description: 'Target to run for the accessibility check (default: "pa11y")'
-        required: false
-        type: string
-        default: 'pa11y'
-    outputs:
-      spellcheck-result:
-        description: "Result of the spelling check"
-        value: ${{ jobs.docchecks.outputs.result_spelling }}
-      woke-result:
-        description: "Result of the inclusive language check"
-        value: ${{ jobs.docchecks.outputs.result_woke }}
-      linkcheck-result:
-        description: "Result of the link check"
-        value: ${{ jobs.docchecks.outputs.result_links }}
-      # pa11y-result:
-      #     description: "Result of the pa11y check"
-      #     value: ${{ jobs.docchecks.outputs.result_pa11y }}
 
 jobs:
   docchecks:
     name: Run documentation checks
-    runs-on: ${{ fromJson(inputs.runs-on) }}
+    runs-on: ["ubuntu-24.04"]
     outputs:
       result_spelling: ${{ steps.spellcheck-step.outcome }}
-      result_woke: ${{ steps.woke-step.outcome }}
-      result_links: ${{ steps.linkcheck-step.outcome }}
       # result_pa11y: ${{ steps.pa11y-step.outcome }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: ${{ inputs.fetch-depth }}
+          fetch-depth: '0'
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python-version }}
+          python-version: '3.10'
 
       - name: Spell Check
         id: spellcheck-step
         if: success() || failure()
         uses: hloeung/documentation-workflows/spellcheck@main
         with:
-          working-directory: ${{ inputs.working-directory }}
-          install-target: ${{ inputs.install-target }}
-          spelling-target: ${{ inputs.spelling-target }}
-          makefile: ${{ inputs.makefile }}
+          working-directory: 'docs'
+          install-target: 'install'
+          spelling-target: 'spelling'
+          makefile: 'use-default'
