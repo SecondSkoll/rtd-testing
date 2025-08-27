@@ -1,6 +1,8 @@
 Enterprise Store documentation
 ==============================
 
+Test: v 3.8!
+
 The **Enterprise Store** provides an on-premise edge proxy to the general
 `Snap Store <https://snapcraft.io/store>`_ for your devices.
 
