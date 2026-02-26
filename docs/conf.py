@@ -285,7 +285,9 @@ html_css_files = [
 
 # Adds custom JavaScript files, located under 'html_static_path'
 
-# html_js_files = []
+html_js_files = [
+    "js/search.js",
+]
 
 # By default, the documentation includes a feedback button at the top.
 # You can disable it by setting the following configuration to True.
